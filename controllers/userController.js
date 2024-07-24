@@ -1,54 +1,10 @@
-// controllers/authController.js
-const User = require('../models/user');
-const jwt = require('jsonwebtoken');
-const bcrypt = require('bcryptjs');
+import User from '../models/user.js';
 
-exports.register = async (req, res) => {
-    const { name, email, password } = req.body;
+export const getAllUsers = async (req, res) => {
     try {
-        let user = await User.findOne({ email });
-        if (user) return res.status(400).json({ msg: 'User already exists' });
-
-        user = new User({ name, email, password });
-        await user.save();
-
-        const payload = { user: { id: user.id } };
-        jwt.sign(payload, 'secret', { expiresIn: '1h' }, (err, token) => {
-            if (err) throw err;
-            res.json({ token });
+        const users = await User.findAll({
+            attributes: { exclude: ['password'] },
         });
-    } catch (err) {
-        console.error(err.message);
-        res.status(500).send('Server error');
-    }
-};
-
-exports.login = async (req, res) => {
-    const { email, password } = req.body;
-    try {
-        const user = await User.findOne({ email });
-        if (!user) return res.status(400).json({ msg: 'Invalid credentials' });
-
-        const isMatch = await bcrypt.compare(password, user.password);
-        if (!isMatch) return res.status(400).json({ msg: 'Invalid credentials' });
-
-        const payload = { user: { id: user.id } };
-        jwt.sign(payload, 'secret', { expiresIn: '1h' }, (err, token) => {
-            if (err) throw err;
-            res.json({ token });
-        });
-    } catch (err) {
-        console.error(err.message);
-        res.status(500).send('Server error');
-    }
-};
-
-// controllers/userController.js
-const User = require('../models/user');
-
-exports.getAllUsers = async (req, res) => {
-    try {
-        const users = await User.find().select('-password');
         res.json(users);
     } catch (err) {
         console.error(err.message);
@@ -56,10 +12,10 @@ exports.getAllUsers = async (req, res) => {
     }
 };
 
-exports.updateUser = async (req, res) => {
+export const updateUser = async (req, res) => {
     const { name, email, password } = req.body;
     try {
-        let user = await User.findById(req.params.id);
+        let user = await User.findByPk(req.params.id);
         if (!user) return res.status(404).json({ msg: 'User not found' });
 
         user.name = name || user.name;
@@ -76,9 +32,9 @@ exports.updateUser = async (req, res) => {
     }
 };
 
-exports.deleteUser = async (req, res) => {
+export const deleteUser = async (req, res) => {
     try {
-        await User.findByIdAndRemove(req.params.id);
+        await User.destroy({ where: { id: req.params.id } });
         res.json({ msg: 'User removed' });
     } catch (err) {
         console.error(err.message);
