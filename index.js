@@ -7,8 +7,8 @@ const app = express();
 
 connectDB();
 
-// Sincronizar modelos com o banco de dados
-sequelize.sync({ force: true }) // force: true irá recriar as tabelas
+
+sequelize.sync({ force: true })
     .then(() => console.log('Database & tables created!'));
 
 app.use(express.json({ extended: false }));
